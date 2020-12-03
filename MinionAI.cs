@@ -46,17 +46,17 @@ namespace GameCharacter.Minioin.Action
         }
         void Update()
         {
-            if (!nav.hasPath && isBattleMove)
+            if (!nav.hasPath && isBattleMove)   //角色手控停止移動
             {
                 MinionAC(MinionState.Idle,isMultipleGame);
                 isBattleMove = false;
             }
-            if (minionState == MinionState.StopAction || minionsCombat.IsSkillOnPlay())
+            if (minionState == MinionState.StopAction || minionsCombat.IsSkillOnPlay()) //特定情況取消攻擊repeating
             {
                 CancelAttackIfIsAttacking();
                 return;
             }
-            if (gameStage.GetStageState() == GameStageController.StageState.Battle && !minionsCombat.IsDead())
+            if (gameStage.GetStageState() == GameStageController.StageState.Battle && !minionsCombat.IsDead())  //AI Action
             {
                 Action();
             }
@@ -68,7 +68,7 @@ namespace GameCharacter.Minioin.Action
             {
                 EngageEnemy();
             }
-            if ((focusTarget == null || !onFocus) && !IsInvoking("AttackTarget"))
+            if ((focusTarget == null || !onFocusDes) && !IsInvoking("AttackTarget"))
             {
                 SearchEnemy();
             }
@@ -214,13 +214,13 @@ namespace GameCharacter.Minioin.Action
                 MinionAC(MinionState.Walk,isMultipleGame);
             }
         }
-        [SerializeField] float faceAngle;
+        
         public void AttackTarget()
         {
             if (focusTarget == null) { return; }
             if (focusTarget.GetComponent<EnemyCombat>().isDead) { focusTarget = null; return; }
 
-            faceAngle = Vector3.Angle(focusTarget.transform.position - transform.position, transform.forward);
+            float faceAngle = Vector3.Angle(focusTarget.transform.position - transform.position, transform.forward);
             minionState = MinionState.Attack;
 
             if (Mathf.Abs(faceAngle) <= 8)//面對目標角度小於8度才攻擊
@@ -260,7 +260,7 @@ namespace GameCharacter.Minioin.Action
                 InvokeRepeating("AttackTarget", 0.01f, attackSpeed);
             }
         }
-        [SerializeField] bool onFocus = false;
+        [SerializeField] bool onFocusDes = false;
         Coroutine changeFocusCoroutine;
         //被手動改變目標呼叫
         public void ChangeFocus(GameObject enemy)
@@ -269,9 +269,9 @@ namespace GameCharacter.Minioin.Action
             CancelAttackIfIsAttacking();
 
             focusTarget = enemy;
-            onFocus = true;
+            onFocusDes = true;
             minionState = MinionState.Idle;
-            if (changeFocusCoroutine == null)
+            if (changeFocusCoroutine == null)   //防止重複互動重製攻擊
             {
                 changeFocusCoroutine = StartCoroutine(ChangeFocusCoroutine());
             }
@@ -329,10 +329,9 @@ namespace GameCharacter.Minioin.Action
             }
         }
         GameObject enemySpawnSpot;
-        EnemyCombat[] enemyList;
         public void SearchEnemy()
         {
-            enemyList = enemySpawnSpot.GetComponentsInChildren<EnemyCombat>();
+            EnemyCombat[] enemyList = enemySpawnSpot.GetComponentsInChildren<EnemyCombat>();
             if (enemyList == null) { return; }
             float preDis = Mathf.Infinity;
             GameObject preTarget = focusTarget;
