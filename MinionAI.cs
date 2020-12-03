@@ -46,8 +46,6 @@ namespace GameCharacter.Minioin.Action
         }
         void Update()
         {
-            if (minionsCombat.isMultipleGame) {
-                if (!photonView.IsMine) return; }
             if (!nav.hasPath && isBattleMove)
             {
                 MinionAC(MinionState.Idle,isMultipleGame);
